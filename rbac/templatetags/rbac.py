@@ -1,0 +1,79 @@
+from django.template import Library
+from django.conf import settings
+from collections import OrderedDict
+from django.urls import reverse
+from rbac.service import re_urls
+register = Library()
+
+
+@register.inclusion_tag('rbac/static_menu.html')
+def static_menu(request):
+    """
+    创建一级菜单
+    :return:
+    """
+    menu_list = request.session[settings.MENU_SESSION_KEY]
+    return {'menu_list': menu_list}
+
+
+@register.inclusion_tag('rbac/multi_menu.html')
+def multi_menu(request):
+    """
+    创建二级菜单
+    :return:
+    """
+    menu_dict = request.session[settings.MENU_SESSION_KEY]
+
+    # 对字典的key进行排序
+    key_list = sorted(menu_dict)
+
+    # 空的有序字典
+    ordered_dict = OrderedDict()
+
+    for key in key_list:
+        val = menu_dict[key]
+        val['class'] = 'hide'
+
+        for per in val['children']:
+            if per['id'] == request.current_selected_permission:
+                per['class'] = 'active'
+                val['class'] = ''
+        ordered_dict[key] = val
+
+    return {'menu_dict': ordered_dict}
+
+
+@register.inclusion_tag('rbac/breadcrumb.html')
+def breadcrumb(request):
+    """
+    路径导航条
+    :param request:
+    :return:
+    """
+    return {"record_list": request.url_record}
+
+
+@register.filter
+def has_permission(request, name):
+    """
+    判断是否有权限
+    :param request:
+    :param name:
+    :return:
+    """
+    if name in request.session[settings.PERMISSION_SESSION_KEY]:
+        return True
+
+
+@register.simple_tag
+def memory_url(request, name, *args, **kwargs):
+    """
+    生成带有原搜索条件的URL(替代了模板中的URL)
+    :param request:
+    :param name:
+    :param args: 接收url中的参数 例如： re_path(r'^menu/edit/(\d+)/*$', menu.menu_edit, name='menu_edit'),
+    :param kwargs: 接收url中有名分组参数 例如：re_path(r'^menu/edit/(?P<pk>\d+)/*$', menu.menu_edit, name='menu_edit'),
+    :return:
+    """
+
+    return re_urls.memory_url(request, name, *args, **kwargs)
