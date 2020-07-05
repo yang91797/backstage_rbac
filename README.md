@@ -17,6 +17,5 @@ rbac目录下有相应使用文档
 
 效果图
 
-![avatar](https://github.com/yang91797/backstage_rbac/rbac展示.png)
-
+![avatar](https://github.com/yang91797/backstage_rbac/blob/master/rbac%E5%B1%95%E7%A4%BA.png)
 
